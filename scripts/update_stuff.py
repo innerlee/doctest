@@ -18,30 +18,28 @@ print("updating the version in the header file")
 doctest_contents = ""
 for line in fileinput.input(["../doctest/parts/doctest_fwd.h"]):
     if line.startswith("#define DOCTEST_VERSION_MAJOR "):
-        doctest_contents += "#define DOCTEST_VERSION_MAJOR " + version_major + "\n"
+        doctest_contents += f"#define DOCTEST_VERSION_MAJOR {version_major}" + "\n"
     elif line.startswith("#define DOCTEST_VERSION_MINOR "):
-        doctest_contents += "#define DOCTEST_VERSION_MINOR " + version_minor + "\n"
+        doctest_contents += f"#define DOCTEST_VERSION_MINOR {version_minor}" + "\n"
     elif line.startswith("#define DOCTEST_VERSION_PATCH "):
-        doctest_contents += "#define DOCTEST_VERSION_PATCH " + version_patch + "\n"
+        doctest_contents += f"#define DOCTEST_VERSION_PATCH {version_patch}" + "\n"
     else:
         doctest_contents += line
 
-readme = open("../doctest/parts/doctest_fwd.h", "w")
-readme.write(doctest_contents)
-readme.close()
-
+with open("../doctest/parts/doctest_fwd.h", "w") as readme:
+    readme.write(doctest_contents)
 # update meson file with version
-meson_contents = ""
-for line in fileinput.input(["../meson.build"]):
-    if line.startswith("project('doctest'"):
-        meson_contents += "project('doctest', ['cpp'], version: '" + version + "', meson_version:'>=0.50')\n"
-    else:
-        meson_contents += line
+meson_contents = "".join(
+    "project('doctest', ['cpp'], version: '"
+    + version
+    + "', meson_version:'>=0.50')\n"
+    if line.startswith("project('doctest'")
+    else line
+    for line in fileinput.input(["../meson.build"])
+)
 
-meson = open("../meson.build", "w")
-meson.write(meson_contents)
-meson.close()
-
+with open("../meson.build", "w") as meson:
+    meson.write(meson_contents)
 # run generate_html.py
 print("generating html documentation from markdown")
 os.system("python generate_html.py")
